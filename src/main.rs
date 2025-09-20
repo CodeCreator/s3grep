@@ -41,7 +41,7 @@ struct Opt {
     prefix: String,
 
     /// Number of concurrent tasks
-    #[structopt(short, long, default_value = "8")]
+    #[structopt(short = "j", long, default_value = "8")]
     concurrent_tasks: usize,
 
     /// Case sensitive search
@@ -56,9 +56,9 @@ struct Opt {
     #[structopt(short = "n", long)]
     line_number: bool,
 
-    /// Remove the leading `s3://bucket/key` prefix from stdout lines
-    #[structopt(long)]
-    strip_s3_path: bool,
+    /// Only print matched content (omit s3://bucket/key prefix)
+    #[structopt(short = "c", long)]
+    content_only: bool,
 }
 
 use anyhow::Result;
@@ -171,7 +171,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let progress = progress.clone();
         let byte_progress = byte_progress.clone();
         let line_numbers = opt.line_number;
-        let strip_s3_path = opt.strip_s3_path;
+        let content_only = opt.content_only;
 
         async move {
             match obj {
@@ -201,7 +201,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     {
                         Ok(matches) => {
                             for (line_num, line) in matches {
-                                let msg = if strip_s3_path {
+                                let msg = if content_only {
                                     if line_numbers {
                                         format!("{}:{}", line_num, highlight_match(&line, &pattern))
                                     } else {
